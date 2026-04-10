@@ -1,0 +1,36 @@
+{
+  "name": "tui-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for controlling TUI applications in sandboxed PTY sessions",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "tui-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "files": ["dist", "src", "tsconfig.json"],
+  "keywords": ["mcp", "tui", "pty", "terminal"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@xterm/headless": "^5.5.0",
+    "node-pty": "^1.0.0",
+    "nanoid": "^5.0.9",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
