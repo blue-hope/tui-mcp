@@ -2,8 +2,30 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createRequire } from "node:module";
+import { readdirSync, existsSync, chmodSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { SessionManager } from "./session-manager.js";
 import { registerTools } from "./tools.js";
+
+// Fix node-pty spawn-helper permissions (prebuild ships without +x)
+try {
+  const ptyDir = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "node_modules",
+    "node-pty",
+    "prebuilds",
+  );
+  if (existsSync(ptyDir)) {
+    for (const dir of readdirSync(ptyDir)) {
+      const helper = join(ptyDir, dir, "spawn-helper");
+      if (existsSync(helper)) chmodSync(helper, 0o755);
+    }
+  }
+} catch {
+  // ignore — best effort
+}
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { name: string; version: string };

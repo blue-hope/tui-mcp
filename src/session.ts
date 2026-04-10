@@ -65,7 +65,7 @@ export class Session {
       });
     }
 
-    this.terminal = new Terminal({ cols, rows, scrollback: 1000 });
+    this.terminal = new Terminal({ cols, rows, scrollback: 1000, allowProposedApi: true });
 
     this.ptyProcess.onData((data) => {
       this.terminal.write(data, () => {
