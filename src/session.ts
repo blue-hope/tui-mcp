@@ -1,5 +1,6 @@
 import * as pty from "node-pty";
-import { Terminal } from "@xterm/headless";
+import xtermHeadless from "@xterm/headless";
+const { Terminal } = xtermHeadless;
 import { Mutex } from "./mutex.js";
 
 export type SessionStatus = "running" | "exited";
@@ -19,7 +20,7 @@ export class Session {
   readonly command: string;
   readonly args: string[];
   readonly ptyProcess: pty.IPty;
-  readonly terminal: Terminal;
+  readonly terminal: InstanceType<typeof Terminal>;
   readonly mutex = new Mutex();
 
   status: SessionStatus = "running";
