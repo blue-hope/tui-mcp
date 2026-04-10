@@ -8,15 +8,12 @@ import { fileURLToPath } from "node:url";
 import { SessionManager } from "./session-manager.js";
 import { registerTools } from "./tools.js";
 
+const require = createRequire(import.meta.url);
+
 // Fix node-pty spawn-helper permissions (prebuild ships without +x)
 try {
-  const ptyDir = join(
-    dirname(fileURLToPath(import.meta.url)),
-    "..",
-    "node_modules",
-    "node-pty",
-    "prebuilds",
-  );
+  const ptyEntry = require.resolve("node-pty");
+  const ptyDir = join(dirname(ptyEntry), "..", "prebuilds");
   if (existsSync(ptyDir)) {
     for (const dir of readdirSync(ptyDir)) {
       const helper = join(ptyDir, dir, "spawn-helper");
@@ -26,8 +23,6 @@ try {
 } catch {
   // ignore — best effort
 }
-
-const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { name: string; version: string };
 
 const server = new McpServer({
