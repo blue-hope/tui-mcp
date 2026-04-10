@@ -1,6 +1,6 @@
 {
-  "name": "tui-mcp",
-  "version": "0.1.0",
+  "name": "@blue-hope/tui-mcp",
+  "version": "0.0.1",
   "description": "MCP server for controlling TUI applications in sandboxed PTY sessions",
   "type": "module",
   "main": "dist/index.js",
