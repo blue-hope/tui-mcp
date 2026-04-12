@@ -15,8 +15,16 @@
     "test:watch": "vitest"
   },
   "files": ["dist", "src", "tsconfig.json"],
-  "keywords": ["mcp", "tui", "pty", "terminal"],
+  "keywords": ["mcp", "tui", "pty", "terminal", "model-context-protocol", "ai", "agent"],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blue-hope/tui-mcp.git"
+  },
+  "homepage": "https://github.com/blue-hope/tui-mcp",
+  "bugs": {
+    "url": "https://github.com/blue-hope/tui-mcp/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@xterm/headless": "^5.5.0",
