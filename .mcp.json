@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "tui": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "/Users/dave/opensource/tui-mcp"
+    }
+  }
+}

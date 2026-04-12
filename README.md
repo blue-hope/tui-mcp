@@ -93,6 +93,8 @@ Any MCP client that supports stdio transport:
 | `launch` | Launch a TUI app in a new PTY session |
 | `list_sessions` | List all active sessions |
 | `kill_session` | Terminate a session |
+| `send_signal` | Send a POSIX signal (SIGINT, SIGTSTP, SIGCONT, etc.) |
+| `wait_for_exit` | Wait for process to exit, returns exit code |
 
 ### Observation
 
@@ -101,6 +103,7 @@ Any MCP client that supports stdio transport:
 | `take_snapshot` | Capture screen content, cursor position, and dimensions |
 | `get_cursor_position` | Get current cursor X/Y |
 | `get_screen_size` | Get terminal cols/rows |
+| `find_text` | Find text position on screen (row, col) |
 
 ### Input
 

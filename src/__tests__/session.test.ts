@@ -146,14 +146,15 @@ describePty("Session", () => {
     await new Promise<void>((resolve) => session.onExit(resolve));
   });
 
-  it("handles non-existent command gracefully", () => {
-    expect(
-      () =>
-        new Session({
-          sessionId: "bad",
-          command: "/nonexistent/command/xyz",
-          args: [],
-        }),
-    ).toThrow();
+  it("handles non-existent command gracefully", async () => {
+    // node-pty spawns via shell, so the PTY itself succeeds but the
+    // process exits quickly with a non-zero exit code
+    const session = createSession({
+      command: "/nonexistent/command/xyz",
+      args: [],
+    });
+    await new Promise<void>((resolve) => session.onExit(resolve));
+    expect(session.status).toBe("exited");
+    expect(session.exitCode).not.toBe(0);
   });
 });

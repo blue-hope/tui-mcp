@@ -422,4 +422,164 @@ export function registerTools(
       },
     ),
   );
+
+  // --- Search ---
+
+  server.registerTool(
+    "find_text",
+    {
+      description:
+        "Find text on the terminal screen and return its position (row, column). Searches visible screen line by line.",
+      inputSchema: {
+        sessionId: z.string().describe("Session ID"),
+        text: z.string().describe("Text to search for (substring match)"),
+        nth: z
+          .number()
+          .min(1)
+          .default(1)
+          .describe("Return the Nth occurrence (default 1)"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    wrapHandler(
+      "find_text",
+      async (args: { sessionId: string; text: string; nth: number }) => {
+        const session = sessionManager.getSession(args.sessionId);
+        const lines = session.getScreenText();
+        let count = 0;
+
+        for (let row = 0; row < lines.length; row++) {
+          let startCol = 0;
+          while (true) {
+            const col = lines[row].indexOf(args.text, startCol);
+            if (col === -1) break;
+            count++;
+            if (count === args.nth) {
+              return jsonResponse({
+                found: true,
+                row,
+                col,
+                context: lines[row].trimEnd(),
+              });
+            }
+            startCol = col + 1;
+          }
+        }
+
+        return jsonResponse({ found: false, occurrences: count });
+      },
+    ),
+  );
+
+  // --- Signals ---
+
+  const ALLOWED_SIGNALS = [
+    "SIGINT",
+    "SIGTERM",
+    "SIGTSTP",
+    "SIGCONT",
+    "SIGUSR1",
+    "SIGUSR2",
+    "SIGHUP",
+    "SIGQUIT",
+  ];
+
+  server.registerTool(
+    "send_signal",
+    {
+      description:
+        "Send a POSIX signal to the session's PTY process. Supports SIGINT, SIGTERM, SIGTSTP, SIGCONT, SIGUSR1, SIGUSR2, SIGHUP, SIGQUIT.",
+      inputSchema: {
+        sessionId: z.string().describe("Session ID"),
+        signal: z
+          .string()
+          .describe(
+            "Signal name (e.g., SIGINT, SIGTSTP, SIGCONT)",
+          ),
+      },
+      annotations: { destructiveHint: true },
+    },
+    wrapHandler(
+      "send_signal",
+      async (args: { sessionId: string; signal: string }) => {
+        const sig = args.signal.toUpperCase();
+        if (!ALLOWED_SIGNALS.includes(sig)) {
+          return errorResponse(
+            `Unknown signal: ${args.signal}. Allowed: ${ALLOWED_SIGNALS.join(", ")}`,
+          );
+        }
+        const session = sessionManager.getSession(args.sessionId);
+        if (session.status !== "running") {
+          return errorResponse(`Session ${args.sessionId} is not running`);
+        }
+        session.sendSignal(sig);
+        return jsonResponse({ success: true, signal: sig });
+      },
+    ),
+  );
+
+  // --- Lifecycle ---
+
+  server.registerTool(
+    "wait_for_exit",
+    {
+      description:
+        "Wait until the session's process exits and return the exit code. Useful for running commands and waiting for completion.",
+      inputSchema: {
+        sessionId: z.string().describe("Session ID"),
+        timeout: z
+          .number()
+          .min(1000)
+          .max(300000)
+          .default(30000)
+          .describe(
+            "Timeout in milliseconds (1000-300000, default 30000)",
+          ),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    wrapHandler(
+      "wait_for_exit",
+      async (args: { sessionId: string; timeout: number }) => {
+        const session = sessionManager.getSession(args.sessionId);
+
+        if (session.status === "exited") {
+          return jsonResponse({
+            exited: true,
+            exitCode: session.exitCode,
+            signal: session.signal,
+          });
+        }
+
+        return new Promise<ReturnType<typeof jsonResponse>>((resolve) => {
+          let settled = false;
+
+          const timer = setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              resolve(
+                errorResponse(
+                  `Timeout waiting for exit after ${args.timeout}ms`,
+                ),
+              );
+            }
+          }, args.timeout);
+
+          session.onExit(() => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              resolve(
+                jsonResponse({
+                  exited: true,
+                  exitCode: session.exitCode,
+                  signal: session.signal,
+                }),
+              );
+            }
+          });
+        });
+      },
+    ),
+  );
 }

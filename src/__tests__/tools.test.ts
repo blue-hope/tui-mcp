@@ -84,13 +84,16 @@ describePty("Tools Integration", () => {
       expect(text).toContain("hello_env");
     });
 
-    it("returns error for bad command", async () => {
-      await expect(
-        sessionManager.createSession({
-          command: "/nonexistent/binary_xyz",
-          args: [],
-        }),
-      ).rejects.toThrow();
+    it("handles bad command (exits with non-zero)", async () => {
+      const result = await sessionManager.createSession({
+        command: "/nonexistent/binary_xyz",
+        args: [],
+      });
+      createdSessions.push(result.sessionId);
+      // PTY spawns via shell, process exits quickly with error
+      const session = sessionManager.getSession(result.sessionId);
+      await new Promise<void>((resolve) => session.onExit(resolve));
+      expect(session.exitCode).not.toBe(0);
     });
   });
 

@@ -126,6 +126,12 @@ export class Session {
     }
   }
 
+  sendSignal(signal: string): void {
+    if (this.status === "running") {
+      process.kill(this.ptyProcess.pid, signal);
+    }
+  }
+
   dispose(): void {
     this.kill();
     this.terminal.dispose();
