@@ -108,13 +108,63 @@ describe("resolveKey", () => {
     });
   });
 
+  describe("modifier + special key (xterm params)", () => {
+    it("resolves Alt+ArrowLeft (word left)", () => {
+      // \x1b[1;3D = Alt modifier (3) + ArrowLeft (D)
+      expect(resolveKey("Alt+ArrowLeft")).toBe("\x1b[1;3D");
+    });
+
+    it("resolves Alt+ArrowRight (word right)", () => {
+      expect(resolveKey("Alt+ArrowRight")).toBe("\x1b[1;3C");
+    });
+
+    it("resolves Opt+Left (macOS alias)", () => {
+      expect(resolveKey("Opt+Left")).toBe("\x1b[1;3D");
+    });
+
+    it("resolves Opt+Right (macOS alias)", () => {
+      expect(resolveKey("Opt+Right")).toBe("\x1b[1;3C");
+    });
+
+    it("resolves Ctrl+ArrowUp", () => {
+      // modifier = 1 + ctrl(4) = 5
+      expect(resolveKey("Ctrl+ArrowUp")).toBe("\x1b[1;5A");
+    });
+
+    it("resolves Ctrl+ArrowDown", () => {
+      expect(resolveKey("Ctrl+ArrowDown")).toBe("\x1b[1;5B");
+    });
+
+    it("resolves Shift+ArrowRight", () => {
+      // modifier = 1 + shift(1) = 2
+      expect(resolveKey("Shift+ArrowRight")).toBe("\x1b[1;2C");
+    });
+
+    it("resolves Ctrl+Shift+ArrowLeft", () => {
+      // modifier = 1 + shift(1) + ctrl(4) = 6
+      expect(resolveKey("Ctrl+Shift+ArrowLeft")).toBe("\x1b[1;6D");
+    });
+
+    it("resolves Alt+Home", () => {
+      expect(resolveKey("Alt+Home")).toBe("\x1b[1;3H");
+    });
+
+    it("resolves Ctrl+Delete", () => {
+      expect(resolveKey("Ctrl+Delete")).toBe("\x1b[3;5~");
+    });
+
+    it("resolves Shift+F5", () => {
+      expect(resolveKey("Shift+F5")).toBe("\x1b[15;2~");
+    });
+
+    it("resolves Alt+F1", () => {
+      expect(resolveKey("Alt+F1")).toBe("\x1b[1;3P");
+    });
+  });
+
   describe("unknown keys", () => {
     it("throws for unknown key names", () => {
       expect(() => resolveKey("FooBar")).toThrow("Unknown key: FooBar");
-    });
-
-    it("throws for invalid modifier combos", () => {
-      expect(() => resolveKey("Ctrl+ArrowUp")).toThrow();
     });
   });
 
