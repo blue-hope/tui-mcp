@@ -329,9 +329,17 @@ export function registerTools(
     "wait_for_stable",
     {
       description:
-        "Wait until the terminal screen stops changing (stable for 100ms).",
+        "Wait until the visible terminal screen content stops changing. Compares actual screen text (not raw PTY data), so cursor blink and other invisible updates are ignored. Default stability window is 500ms.",
       inputSchema: {
         sessionId: z.string().describe("Session ID"),
+        stableMs: z
+          .number()
+          .min(100)
+          .max(5000)
+          .default(500)
+          .describe(
+            "How long the screen must remain unchanged to be considered stable (100-5000ms, default 500)",
+          ),
         timeout: z
           .number()
           .min(1000)
@@ -343,13 +351,18 @@ export function registerTools(
     },
     wrapHandler(
       "wait_for_stable",
-      async (args: { sessionId: string; timeout: number }) => {
+      async (args: {
+        sessionId: string;
+        stableMs: number;
+        timeout: number;
+      }) => {
         const session = sessionManager.getSession(args.sessionId);
         const deadline = Date.now() + args.timeout;
+        const stableThreshold = args.stableMs;
 
         return new Promise<ReturnType<typeof jsonResponse>>((resolve) => {
           let settled = false;
-          let lastVersion = session.writeVersion;
+          let lastScreenText = session.getScreenText().join("\n");
           let stableSince = Date.now();
 
           const onSessionExit = () => {
@@ -367,13 +380,13 @@ export function registerTools(
           const check = () => {
             if (settled) return;
 
-            const currentVersion = session.writeVersion;
-            if (currentVersion !== lastVersion) {
-              lastVersion = currentVersion;
+            const currentText = session.getScreenText().join("\n");
+            if (currentText !== lastScreenText) {
+              lastScreenText = currentText;
               stableSince = Date.now();
             }
 
-            if (Date.now() - stableSince >= 100) {
+            if (Date.now() - stableSince >= stableThreshold) {
               settled = true;
               const lines = session.getScreenText();
               const cursor = session.getCursorPosition();
